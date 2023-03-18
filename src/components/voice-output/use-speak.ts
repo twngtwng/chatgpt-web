@@ -2,7 +2,6 @@ import { onUnmounted, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useSpeechStore } from '@/store/modules/speech'
 import { useSpeechObject } from '@/components/voice-input/speech-object'
-import { logger } from '@/components/voice-input/utils'
 
 let synth: SpeechSynthesis | undefined
 export const useSpeak = () => {
@@ -44,7 +43,7 @@ export const useSpeak = () => {
       voiceSynthesis.onerror = (e) => {
         cancelSpeak()
         cleanVoice()
-        logger(e.error.toString())
+        window?.loggerDebugger(e.toString())
       }
     }
 
