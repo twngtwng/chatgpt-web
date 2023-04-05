@@ -40,10 +40,10 @@ export const useSpeak = () => {
       voiceSynthesis = new SpeechSynthesisUtterance(text)
       voiceSynthesis.onstart = onstart
       voiceSynthesis.onend = onend
-      voiceSynthesis.onerror = (e) => {
+      voiceSynthesis.onerror = (event) => {
         cancelSpeak()
         cleanVoice()
-        window?.loggerDebugger(e.toString())
+        window?.loggerDebugger(event.error.toString())
       }
     }
 

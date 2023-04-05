@@ -1,3 +1,4 @@
+cp -f ../docker-compose.yml ./
 echo "build docker start"
 docker build -t chatgpt-web .
 echo "build docker success"
