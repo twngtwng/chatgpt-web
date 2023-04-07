@@ -4,6 +4,7 @@ import { computed, h, ref, watch } from 'vue'
 import { NButton, NCard, NDataTable, NDivider, NInput, NList, NListItem, NModal, NPopconfirm, NSpace, NTabPane, NTabs, NThing, useMessage } from 'naive-ui'
 import PromptRecommend from '../../../assets/recommend.json'
 import { SvgIcon } from '..'
+import defaultPrompt from '@/assets/ChatGPTPromptTemplate.json'
 import { usePromptStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
@@ -147,7 +148,7 @@ const clearPromptTemplate = () => {
   message.success(t('common.clearSuccess'))
 }
 
-const importPromptTemplate = (from = 'online') => {
+const importPromptTemplate = (from = 'online', showTip = true) => {
   try {
     const jsonData = JSON.parse(tempPromptValue.value)
     let key = ''
@@ -173,12 +174,12 @@ const importPromptTemplate = (from = 'online') => {
       let safe = true
       for (const j of promptList.value) {
         if (j.key === i[key]) {
-          message.warning(t('store.importRepeatTitle', { msg: i[key] }))
+          showTip && message.warning(t('store.importRepeatTitle', { msg: i[key] }))
           safe = false
           break
         }
         if (j.value === i[value]) {
-          message.warning(t('store.importRepeatContent', { msg: i[key] }))
+          showTip && message.warning(t('store.importRepeatContent', { msg: i[key] }))
           safe = false
           break
         }
@@ -186,7 +187,7 @@ const importPromptTemplate = (from = 'online') => {
       if (safe)
         promptList.value.unshift({ key: i[key], value: i[value] } as never)
     }
-    message.success(t('common.importSuccess'))
+    showTip && message.success(t('common.importSuccess'))
   }
   catch {
     message.error('JSON 格式错误，请检查 JSON 格式')
@@ -236,6 +237,11 @@ const downloadPromptTemplate = async () => {
   finally {
     importLoading.value = false
   }
+}
+
+if (defaultPrompt?.length) {
+  tempPromptValue.value = JSON.stringify(defaultPrompt)
+  importPromptTemplate('online', false)
 }
 
 // 移动端自适应相关
