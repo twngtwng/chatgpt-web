@@ -11,6 +11,7 @@ import { useChat } from './hooks/useChat'
 import { useCopyCode } from './hooks/useCopyCode'
 import { useUsingContext } from './hooks/useUsingContext'
 import HeaderComponent from './components/Header/index.vue'
+import { imgPrompt, isToImg, useGenerateImg } from './gen-img'
 import { SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
@@ -47,6 +48,16 @@ const prompt = ref<string>('')
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
 
+const { genImg } = useGenerateImg({
+  uuid,
+  dataSources,
+  conversationList,
+  usingContext,
+  scrollToBottom,
+  loading,
+  prompt,
+})
+
 // 添加PromptStore
 const promptStore = usePromptStore()
 
@@ -60,7 +71,12 @@ dataSources.value.forEach((item, index) => {
 })
 
 function handleSubmit() {
-  onConversation()
+  const message = prompt.value
+  if (isToImg(message))
+    genImg()
+
+  else
+    onConversation()
 }
 
 async function onConversation() {
@@ -211,12 +227,17 @@ async function onConversation() {
 }
 
 async function onRegenerate(index: number) {
+  const { requestOptions } = dataSources.value[index]
+
+  if (isToImg(requestOptions.prompt)) {
+    genImg(index)
+    return
+  }
+
   if (loading.value)
     return
 
   controller = new AbortController()
-
-  const { requestOptions } = dataSources.value[index]
 
   let message = requestOptions?.prompt ?? ''
 
@@ -400,17 +421,26 @@ function handleStop() {
   }
 }
 
+const promptOpts = computed(() => {
+  return [
+    ...imgPrompt,
+    ...promptTemplate.value,
+  ]
+})
+
 // 可优化部分
 // 搜索选项计算，这里使用value作为索引项，所以当出现重复value时渲染异常(多项同时出现选中效果)
 // 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
 const searchOptions = computed(() => {
   if (prompt.value.startsWith('/')) {
-    return promptTemplate.value.filter((item: { key: string }) => item.key.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
-      return {
-        label: obj.value,
-        value: obj.value,
-      }
-    })
+    return promptOpts.value
+      .filter((item: { key: string }) => item.key.toLowerCase().includes(prompt.value.substring(1).toLowerCase()))
+      .map((obj: { value: any }) => {
+        return {
+          label: obj.value,
+          value: obj.value,
+        }
+      })
   }
   else {
     return []
@@ -419,7 +449,7 @@ const searchOptions = computed(() => {
 
 // value反渲染key
 const renderOption = (option: { label: string }) => {
-  for (const i of promptTemplate.value) {
+  for (const i of promptOpts.value) {
     if (i.value === option.label)
       return [i.key]
   }

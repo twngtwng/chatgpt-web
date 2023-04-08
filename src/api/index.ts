@@ -70,3 +70,12 @@ export function fetchAzureToken<T>() {
     url: '/get-azure-token',
   })
 }
+
+export function txtToImg<T>(options: { data: Record<string, any>; signal?: GenericAbortSignal }) {
+  const { data, signal } = options
+  return post<T>({
+    url: '/txt-2-image',
+    signal,
+    data,
+  })
+}

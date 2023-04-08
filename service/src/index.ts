@@ -6,6 +6,7 @@ import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
+import { txt2Image } from './middleware/sd-api'
 
 const app = express()
 const router = express.Router()
@@ -21,7 +22,7 @@ app.all('*', (_, res, next) => {
 })
 
 router.get('/get-test', async (req, res) => {
-	res.send({ status: 'Success', message: 'get-test', data: null })
+  res.send({ status: 'Success', message: 'get-test', data: null })
 })
 
 router.post('/chat-process', [auth, limiter], async (req, res) => {
@@ -87,7 +88,9 @@ router.post('/verify', async (req, res) => {
   }
 })
 
-router.post('/get-azure-token', getAzureSubscriptionKey)
+router.post('/get-azure-token', auth, getAzureSubscriptionKey)
+
+router.post('/txt-2-image', auth, txt2Image)
 
 app.use('', router)
 app.use('/api', router)
